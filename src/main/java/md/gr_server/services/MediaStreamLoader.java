@@ -7,5 +7,5 @@ import java.io.IOException;
 
 public interface MediaStreamLoader {
     ResponseEntity<StreamingResponseBody> loadMediaFile
-            (String localMediaFilePath, String rangeValues) throws IOException;
+            (Long songId, String rangeValues) throws IOException;
 }

@@ -20,23 +20,21 @@ public class MediaPlayController {
 
     private final MediaStreamLoader mediaLoaderService;
 
-    @GetMapping(value = "video")
+    @GetMapping(value = "audio/{songId}")
     @ResponseBody
     public ResponseEntity<StreamingResponseBody> playVideo (
-            @RequestParam("songId") String songId,
+            @PathVariable("songId") Long songId,
             @RequestHeader(value = "Range", required = false) String rangeHeader
     ) {
         // TODO: Get media package path string from application.properties
-        // TODO: Get media name from Database instead of hardcoded SongId
-        String filePathString = "D:\\Documents\\Java\\Spring\\GR_Server\\src\\main\\resources\\static\\video\\" + songId;
         try {
-            return mediaLoaderService.loadMediaFile(filePathString, rangeHeader);
+            return mediaLoaderService.loadMediaFile(songId, rangeHeader);
         } catch (InvalidPathException e) {
             log.error("Invalid media file path" + e.getReason());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         catch (FileNotFoundException e) {
-            log.error("File Not Found: " + filePathString);
+            log.error("File Not Found: " + e.getMessage());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (IOException e) {
             log.error(HttpStatus.INTERNAL_SERVER_ERROR.toString());

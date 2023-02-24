@@ -1,5 +1,8 @@
 package md.gr_server.services;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +15,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service
+@RequiredArgsConstructor
 public class MediaStreamLoaderImpl implements MediaStreamLoader {
+    private final SongService songService;
+
     @Override
-    public ResponseEntity<StreamingResponseBody> loadMediaFile(String filePathString, String rangeHeader)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> loadMediaFile(
+            @NotNull(message = "SongId required")
+            @Min(value = 1, message = "SongId must be >= 1") Long songId,
+            String rangeHeader
+    ) throws IOException {
+        String songPath = songService.findSongPath(songId);
+        String filePathString = "D:\\Documents\\Java\\Spring\\GR_Server\\src\\main\\resources\\static\\audio\\" + songPath;
+
         if (filePathString == null || filePathString.isBlank()) {
             throw new IllegalArgumentException("The full path to the media file is NULL or empty.");
         }
@@ -31,7 +43,10 @@ public class MediaStreamLoaderImpl implements MediaStreamLoader {
             ranges[i] = ranges[i].replaceAll("[^0-9]", "");
         }
         long rangeStart = (ranges[0].matches("[0-9]+")) ? Long.parseLong(ranges[0]) : 0L;
-        long rangeEnd = (ranges[1].matches("[0-9]+")) ? Long.parseLong(ranges[1]) : fileSize - 1;
+        long rangeEnd = fileSize - 1;
+        if (ranges.length > 1 && ranges[1].matches("[0-9]+")) {
+            rangeEnd = Long.parseLong(ranges[1]);
+        }
 
         if (rangeStart < 0) {
             rangeStart = 0L;
@@ -54,8 +69,8 @@ public class MediaStreamLoaderImpl implements MediaStreamLoader {
         final HttpHeaders responseHeaders = new HttpHeaders();
 
         String contentLength = String.valueOf((rangeEnd - rangeStart) + 1);
-        // TODO: Hardcoded video/mp4 ! Change to be flexible.
-        responseHeaders.add("Content-Type", "video/mp4");
+        // TODO: Hardcoded video/x-mpeg ! Change to be flexible.
+        responseHeaders.add("Content-Type", "video/x-mpeg");
         responseHeaders.add("Content-Length", contentLength);
         responseHeaders.add("Accept-Ranges", "bytes");
         responseHeaders.add("Content-Range", "bytes" + " " +
