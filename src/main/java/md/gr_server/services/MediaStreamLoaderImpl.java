@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -75,8 +76,9 @@ public class MediaStreamLoaderImpl implements MediaStreamLoader {
         final HttpHeaders responseHeaders = new HttpHeaders();
 
         String contentLength = String.valueOf((rangeEnd - rangeStart) + 1);
-        // TODO: Hardcoded video/x-mpeg ! Change to be flexible.
-        responseHeaders.add("Content-Type", "video/x-mpeg");
+        String mediaType = URLConnection.guessContentTypeFromName(filePathString);
+
+        responseHeaders.add("Content-Type", mediaType);
         responseHeaders.add("Content-Length", contentLength);
         responseHeaders.add("Accept-Ranges", "bytes");
         responseHeaders.add("Content-Range", "bytes" + " " +
