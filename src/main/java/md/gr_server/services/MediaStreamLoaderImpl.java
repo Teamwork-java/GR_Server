@@ -2,7 +2,7 @@ package md.gr_server.services;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service
-@RequiredArgsConstructor
 public class MediaStreamLoaderImpl implements MediaStreamLoader {
     private final SongService songService;
+    private final String songPackage;
+    private final String clipPackage;
+
+    public MediaStreamLoaderImpl(
+            SongService songService,
+            @Value("${media.audio.package}") String songPackage,
+            @Value("${media.video.package}") String clipPackage) {
+        this.songService = songService;
+        this.songPackage = songPackage;
+        this.clipPackage = clipPackage;
+    }
 
     @Override
     public ResponseEntity<StreamingResponseBody> loadMediaFile(
@@ -26,11 +36,7 @@ public class MediaStreamLoaderImpl implements MediaStreamLoader {
             String rangeHeader
     ) throws IOException {
         String songPath = songService.findSongPath(songId);
-        String filePathString = "D:\\Documents\\Java\\Spring\\GR_Server\\src\\main\\resources\\static\\audio\\" + songPath;
-
-        if (filePathString == null || filePathString.isBlank()) {
-            throw new IllegalArgumentException("The full path to the media file is NULL or empty.");
-        }
+        String filePathString = songPackage + songPath;
 
         Path filePath = Path.of(filePathString);
         long fileSize = Files.size(filePath);
